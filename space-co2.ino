@@ -33,6 +33,9 @@ void loop() {
     latestPPM = "Preheating";
   } else if (co2sensor.isReady()) {
     int co2_ppm = co2sensor.readCO2UART();
+    
+    // Setup screen for new value
+    u8x8.clear();
     if (co2_ppm >= 0) {
       // If reading is successful, store latest reading for printing until next positive value.
       latestPPM = "";
