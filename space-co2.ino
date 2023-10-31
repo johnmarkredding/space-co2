@@ -1,9 +1,12 @@
-#include <Arduino.h>
 #include <Arduino_LPS22HB.h>
+#include <U8x8lib.h>
 #include "src/MHZ.h"
 
+U8X8_SSD1309_128X64_NONAME0_4W_HW_SPI u8x8(/* cs=*/ 8, /* dc=*/ 9, /* reset=*/ 10);
+
 MHZ co2sensor(&Serial1, MHZ19B);
-arduino::String latestPPM = "";
+
+arduino::String latestPPM = ""; // Keep track of the last known co2 reading
 
 void setup() {
   Serial.begin(9600);
@@ -11,14 +14,15 @@ void setup() {
 
   while (!Serial);
   while (!Serial1);
-
-  co2sensor.setAutoCalibrate(true);
-  co2sensor.calibrateZero();
   
   if (!BARO.begin()) {
     Serial.println("Failed to initialize pressure sensor!");
     while (1);
   }
+
+  // Setup Display
+  u8x8.begin();
+  u8x8.setFont(u8x8_font_amstrad_cpc_extended_r);
 }
 
 void loop() {
@@ -30,19 +34,23 @@ void loop() {
   } else if (co2sensor.isReady()) {
     int co2_ppm = co2sensor.readCO2UART();
     if (co2_ppm >= 0) {
-      // If reading is successful, set latest reading
+      // If reading is successful, store latest reading for printing until next positive value.
       latestPPM = "";
       latestPPM += co2_ppm;
       latestPPM += "ppm";
     } else {
+      // Otherwise, print error code
       Serial.print("Error reading CO2 values: ");
       Serial.println(co2_ppm);
     }
   }
 
-  // Always print latest reading.
+  // Always log latest reading.
   Serial.print("Latest co2 concentration: ");
   Serial.println(latestPPM);
+
+  // Print to display
+  u8x8.drawString(0, 0, latestPPM.c_str());
 
 
   // BAROMETER STUFFS
