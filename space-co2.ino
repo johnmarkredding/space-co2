@@ -7,6 +7,8 @@ U8X8_SSD1309_128X64_NONAME0_4W_HW_SPI u8x8(/* cs=*/ 8, /* dc=*/ 9, /* reset=*/ 1
 MHZ co2sensor(&Serial1, MHZ19B);
 
 arduino::String latestPPM = ""; // Keep track of the last known co2 reading
+arduino::String latestPressure = "";
+arduino::String latestTemp = "";
 
 void setup() {
   Serial.begin(9600);
@@ -43,7 +45,7 @@ void loop() {
       latestPPM += "ppm";
     } else {
       // Otherwise, print error code
-      Serial.print("Error reading CO2 values: ");
+      Serial.print("No New Valid CO2 values: ");
       Serial.println(co2_ppm);
     }
   }
@@ -52,25 +54,30 @@ void loop() {
   Serial.print("Latest co2 concentration: ");
   Serial.println(latestPPM);
 
-  // Print to display
-  u8x8.drawString(0, 0, latestPPM.c_str());
+
 
 
   // BAROMETER STUFFS
 
-  float pressure = BARO.readPressure();
+  //float pressure = BARO.readPressure();
+  latestPressure = arduino::String(BARO.readPressure());
 
   Serial.print("Pressure = ");
-  Serial.print(pressure);
+  Serial.print(latestPressure);
   Serial.println(" kPa");
 
-  float temperature = BARO.readTemperature();
+  latestTemp = arduino::String(BARO.readTemperature());
 
   Serial.print("Temperature = ");
-  Serial.print(temperature);
+  Serial.print(latestTemp);
   Serial.println(" C");
   Serial.println();
 
   // only run loop once every second
   delay(1000);
+
+    // Print to display
+  u8x8.drawString(0, 0, latestPPM.c_str());
+  u8x8.drawString(0, 1, latestPressure.c_str());
+  u8x8.drawString(0, 2, latestTemp.c_str());
 }
